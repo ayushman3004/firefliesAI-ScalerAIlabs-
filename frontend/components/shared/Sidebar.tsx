@@ -14,7 +14,16 @@ import {
   Plus,
 } from 'lucide-react';
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: any;
+  separator?: boolean;
+  shortcut?: string;
+  badge?: string;
+}
+
+const navItems: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/meetings', label: 'Meetings', icon: Video },
   { href: '/uploads', label: 'Uploads', icon: Upload },
