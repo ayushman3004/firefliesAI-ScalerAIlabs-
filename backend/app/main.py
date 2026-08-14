@@ -48,9 +48,16 @@ else:
         "http://10.182.169.104:3000",
     ]
 
+import re
+
+# Regex pattern to match vercel.app domains (including previews) and localhost/local network IPs
+allow_origin_regex = r"https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+)(:\d+)?|https://.*\.vercel\.app"
+cors_regex = re.compile(allow_origin_regex)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,11 +70,17 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 def add_cors_headers(request: Request, response: Response):
     origin = request.headers.get("origin")
-    if origin and (origin in allowed_origins or "*" in allowed_origins):
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "*"
+    if origin:
+        is_allowed = (
+            origin in allowed_origins 
+            or "*" in allowed_origins 
+            or bool(cors_regex.match(origin))
+        )
+        if is_allowed:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "*"
+            response.headers["Access-Control-Allow-Headers"] = "*"
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
